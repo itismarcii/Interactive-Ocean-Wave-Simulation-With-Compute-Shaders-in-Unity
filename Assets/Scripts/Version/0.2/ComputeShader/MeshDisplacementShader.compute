@@ -1,0 +1,71 @@
+#pragma kernel wave_displacement 0
+#pragma kernel triangle_setup 1
+
+#define PI 3.14159265358979323846
+
+#define THREAD_GROUP_SIZE_X 32
+#define THREAD_GROUP_SIZE_Y 1
+#define THREAD_GROUP_SIZE_Z 32
+
+RWStructuredBuffer<float3> VerticesOutput;
+RWStructuredBuffer<float2> UvOutput;
+RWStructuredBuffer<int> TriangleOutput;
+
+int mesh_resolution = 1;
+float _TIME_;
+
+float4 wave_information;
+float max_height_amplifier;
+
+float3 gerstner_wave_displacement(const float3 position, float4 wave)
+{
+    const float maxHeight = (wave.w / 7) + max_height_amplifier;      // Clamped max Height
+    const float k = 2 * PI / wave.w;                                  // Wave Number
+    const float A = wave.z * 2 > maxHeight ? maxHeight / 2 : wave.z;  // Amplitude
+    const float c = sqrt(PI / k);                                     // Wave Speed
+    const float2 direction = normalize(wave.xy);                      // Normalized Wave Direction
+    const float f = k * dot(direction, position.xz) - c * _TIME_;     // Wave Phase
+
+    return float3(                                                    // Displacement
+        A * direction.x * cos(f),
+        A * sin(f),
+        A * direction.y * cos(f));
+}
+
+[numthreads(32,1,32)]
+void wave_displacement (uint3 id : SV_DispatchThreadID)
+{
+    // Skip iterations if the thread ID is invalid
+    if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
+
+    float3 position = id;
+    if(position.x >= mesh_resolution || position.z >= mesh_resolution) return;
+    
+    const int index = position.x + position.z * mesh_resolution;
+    position += gerstner_wave_displacement(position, wave_information);
+
+    VerticesOutput[index] = position;
+    UvOutput[index] = position.xz;
+}
+
+[numthreads(32,1,32)]
+void triangle_setup (uint3 id : SV_DispatchThreadID)
+{
+    // Skip iterations if the thread ID is invalid
+    if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
+
+    float3 vertex = id;
+    if(vertex.x < mesh_resolution - 1 && vertex.z < mesh_resolution - 1)
+    {
+        int index = (id.x + (mesh_resolution - 1) * id.z) * 6;
+
+        TriangleOutput[index++] = id.x + mesh_resolution * id.z;
+        TriangleOutput[index++] = id.x + mesh_resolution * (id.z + 1);
+        TriangleOutput[index++] = (id.x + 1) + mesh_resolution * (id.z + 1);
+
+        TriangleOutput[index++] = (id.x + 1) + mesh_resolution * (id.z + 1);
+        TriangleOutput[index++] = (id.x + 1) + mesh_resolution * id.z;
+        TriangleOutput[index] = id.x + mesh_resolution * id.z;
+    }
+
+}
