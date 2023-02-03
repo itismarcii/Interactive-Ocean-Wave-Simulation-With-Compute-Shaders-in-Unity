@@ -8,7 +8,7 @@ namespace Version._0._1.Base
     public struct WaveInformation
     {
         [SerializeField] internal Vector2 Direction;
-        [SerializeField] internal float Amplitude;
+        [FormerlySerializedAs("Steepness")] [SerializeField] internal float Amplitude;
         [SerializeField] internal float WaveLength;
     }
 }
