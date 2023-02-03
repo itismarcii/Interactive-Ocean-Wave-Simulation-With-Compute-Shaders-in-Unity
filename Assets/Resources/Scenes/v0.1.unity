@@ -483,3 +483,10 @@ MonoBehaviour:
   - Direction: {x: 1, y: 1}
     Amplitude: 1
     WaveLength: 10
+  - Direction: {x: 0, y: 1}
+    Amplitude: 0.3
+    WaveLength: 5
+  - Direction: {x: 0.5, y: 0.5}
+    Amplitude: 0.2
+    WaveLength: 2
+  _AmountOfWaveCalculations: 100
