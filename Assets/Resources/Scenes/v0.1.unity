@@ -478,7 +478,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _MeshFilter: {fileID: 1182787051}
+  MaxHeightAmplifier: 0
   _Wave:
     Direction: {x: 1, y: 1}
-    Amplitude: 0.33
-    WaveLength: 6.57
+    Amplitude: 4.69
+    WaveLength: 14

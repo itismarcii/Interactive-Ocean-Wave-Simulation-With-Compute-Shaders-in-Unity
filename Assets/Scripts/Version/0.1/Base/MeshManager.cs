@@ -19,7 +19,7 @@ public class MeshManager : MonoBehaviour
     void Update()
     {
         GerstnerWave.UpdateTime(Time.deltaTime);
-        GerstnerWave.SetMaxHeightAmplifier(MaxHeightAmplifier);
+        GerstnerWave.MaxHeightAmplifier = MaxHeightAmplifier;
         _MeshFilter.mesh = GerstnerWave.UpdateWave(_MeshFilter.mesh, _Wave);
     }
 }

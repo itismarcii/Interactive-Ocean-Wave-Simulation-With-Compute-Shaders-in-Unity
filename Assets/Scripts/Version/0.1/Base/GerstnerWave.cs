@@ -8,11 +8,10 @@ namespace Version._0._1.Base
         private static float _TIME_ = 1;
         private const float PI = 3.14159265358979323846f;
         private static Vector3[] BaseGrid;
-        private static float MaxHeightAmplifier = 0;
+        internal static float MaxHeightAmplifier = 0;
 
         public static void UpdateTime(float deltaTime, float multiplier = 1) => _TIME_ += deltaTime * multiplier;
         public static void SetBaseGrid(Vector3[] grid) => BaseGrid = grid;
-        public static void SetMaxHeightAmplifier(float value) => MaxHeightAmplifier = value;
         
         public static Mesh UpdateWave(Mesh mesh, WaveInformation wave)
         {
