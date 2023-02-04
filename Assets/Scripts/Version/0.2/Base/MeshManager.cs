@@ -30,7 +30,7 @@ namespace Version._0._2.Base
             _GlobalTimePropertyID = Shader.PropertyToID("_TIME_"),
             _MeshResolutionPropertyID = Shader.PropertyToID("mesh_resolution"),
             _WaveParameterBufferPropertyID = Shader.PropertyToID("WaveParameters"),
-            _WaveInformationArrayLengthPropertyID = Shader.PropertyToID("wave_information_count"),
+            _WaveInformationArrayLengthPropertyID = Shader.PropertyToID("wave_parameter_count"),
             _MaxHeightAmplifierPropertyID = Shader.PropertyToID("max_height_amplifier");
 
         private Vector4[] _WaveArray = Array.Empty<Vector4>();
