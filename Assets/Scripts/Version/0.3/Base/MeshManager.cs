@@ -71,7 +71,7 @@ namespace Version._0._3.Base
 
             _VerticesBuffer = new ComputeBuffer(_VertexCount, sizeof(float) * 3);
             _UVBuffer = new ComputeBuffer(_VertexCount, sizeof(float) * 2);
-            _WaveParameterBuffer = new ComputeBuffer(_WaveParameters.Length, sizeof(float) * 4);
+            _WaveParameterBuffer = new ComputeBuffer(_WaveParameters.Length, sizeof(float) * 5);
 
             using var triangleBuffer = new ComputeBuffer(_VertexCount * 3, sizeof(int));
                 _MeshFilter.mesh.triangles = GetBufferData(1, triangleBuffer, _TriangleOutputBufferPropertyID,

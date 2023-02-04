@@ -7,22 +7,22 @@
 #define THREAD_GROUP_SIZE_Y 1
 #define THREAD_GROUP_SIZE_Z 32
 
+struct WaveParameter
+{
+    float2 direction;
+    float amplitude;
+    float wave_length;
+    float speedModifer;
+};
+
 // Input
-RWStructuredBuffer<float4> WaveParameters;
+RWStructuredBuffer<WaveParameter> WaveParameters;
 
 // Output
 RWStructuredBuffer<float3> VerticesOutput;
 RWStructuredBuffer<float2> UvOutput;
 RWStructuredBuffer<int> TriangleOutput;
 
-
-
-struct WaveParameter
-{
-    float2 direction;
-    float amplitude;
-    float wave_length;
-};
 
 int mesh_resolution = 1;
 float _TIME_;
@@ -31,16 +31,16 @@ float scaling;
 int wave_parameter_count;
 float max_height_amplifier;
 
-float3 gerstner_wave_displacement(const float3 position, float4 wave)
+float3 gerstner_wave_displacement(const float3 position, WaveParameter wave)
 {
-    const float maxHeight = (wave.w / 7) + max_height_amplifier;      // Clamped max Height
-    const float k = 2 * PI / wave.w;                                  // Wave Number
-    const float A = wave.z * 2 > maxHeight ? maxHeight / 2 : wave.z;  // Amplitude
-    const float c = sqrt(PI / k);                                     // Wave Speed
-    const float2 direction = normalize(wave.xy);                      // Normalized Wave Direction
-    const float f = k * dot(direction, position.xz) - c * _TIME_;     // Wave Phase
+    const float maxHeight = (wave.wave_length / 7) + max_height_amplifier;                  // Clamped max Height
+    const float k = 2 * PI / wave.wave_length;                                              // Wave Number
+    const float A = wave.amplitude * 2 > maxHeight ? maxHeight / 2 : wave.amplitude;        // Amplitude
+    const float c = sqrt(PI / k);                                                           // Wave Speed
+    const float2 direction = normalize(wave.direction);                                     // Normalized Wave Direction
+    const float f = k * dot(direction, position.xz) - (c * _TIME_) * wave.speedModifer;     // Wave Phase
 
-    return float3(                                                    // Displacement
+    return float3(                                                                          // Displacement
         A * direction.x * cos(f),
         A * sin(f),
         A * direction.y * cos(f));

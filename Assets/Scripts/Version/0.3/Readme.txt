@@ -1,3 +1,1 @@
-v0.1 : GerstnerWave in Unity via Compute Shaders
-
-Description:    Implementation of "Gerstner wave" on a Mesh via Compute Shaders
+v0.3 : Implementation of a chunk system on the Compute Shader for variations of mesh sizes

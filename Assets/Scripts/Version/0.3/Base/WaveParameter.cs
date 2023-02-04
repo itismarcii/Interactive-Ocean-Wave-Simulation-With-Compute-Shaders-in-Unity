@@ -9,5 +9,6 @@ namespace Version._0._3.Base
         [SerializeField] internal Vector2 Direction;
         [SerializeField] internal float Amplitude;
         [SerializeField] internal float WaveLength;
+        [SerializeField] internal float SpeedModifer;
     }
 }
