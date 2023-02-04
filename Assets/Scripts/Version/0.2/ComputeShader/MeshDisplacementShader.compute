@@ -79,17 +79,15 @@ void triangle_setup (int3 id : SV_DispatchThreadID)
     // Skip iterations if the thread ID is invalid
     if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
 
-    if(id.x < mesh_resolution - 1 && id.z < mesh_resolution - 1)
-    {
-        int index = (id.x + (mesh_resolution - 1) * id.z) * 6;
+    if(id.x >= mesh_resolution - 1 || id.z >= mesh_resolution - 1) return;
+    
+    int index = (id.x + (mesh_resolution - 1) * id.z) * 6;
 
-        TriangleOutput[index++] = id.x + mesh_resolution * id.z;
-        TriangleOutput[index++] = id.x + mesh_resolution * (id.z + 1);
-        TriangleOutput[index++] = (id.x + 1) + mesh_resolution * (id.z + 1);
+    TriangleOutput[index++] = id.x + mesh_resolution * id.z;
+    TriangleOutput[index++] = id.x + mesh_resolution * (id.z + 1);
+    TriangleOutput[index++] = (id.x + 1) + mesh_resolution * (id.z + 1);
 
-        TriangleOutput[index++] = (id.x + 1) + mesh_resolution * (id.z + 1);
-        TriangleOutput[index++] = (id.x + 1) + mesh_resolution * id.z;
-        TriangleOutput[index] = id.x + mesh_resolution * id.z;
-    }
-
+    TriangleOutput[index++] = (id.x + 1) + mesh_resolution * (id.z + 1);
+    TriangleOutput[index++] = (id.x + 1) + mesh_resolution * id.z;
+    TriangleOutput[index] = id.x + mesh_resolution * id.z;
 }
