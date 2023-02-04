@@ -13,6 +13,9 @@ namespace Version._0._2.Base
     public class MeshManager : MonoBehaviour
     {
 
+        [SerializeField] private int _WaveMultiplier = 1;
+        [Space]
+        
         private const int _KERNEL_ID_X = 32, _KERNEL_ID_Y = 1, _KERNEL_ID_Z = 32;
 
         [SerializeField] private ComputeShader _ComputeShader;
@@ -40,6 +43,12 @@ namespace Version._0._2.Base
         private int _VertexCount;
         private Mesh _Mesh;
 
+        private Stopwatch _Stopwatch = new Stopwatch();
+        private float _StartTime = 0;
+        private const int _END_TIME = 60;
+        private int _CalculationAmount = 0;
+        private TimeSpan _DurationCalculation;
+
         private void OnDisable()
         {
             _VerticesBuffer?.Dispose();
@@ -51,29 +60,50 @@ namespace Version._0._2.Base
         {
             _Mesh = _MeshFilter.mesh;
 
-            // AlternateArray();
+            AlternateArray();
             
+            
+            _Stopwatch.Start();
             Setup();
+            _Stopwatch.Stop();
+            Debug.Log($"Setup duration: {_Stopwatch.Elapsed}");
+            _Stopwatch.Reset();
         }
 
         private void AlternateArray()
         {
             var newArrayList = new List<WaveParameter>();
 
-            for (int i = 0; i < 300; i++)
+            for (int i = 0; i < _WaveMultiplier; i++)
             {
                 newArrayList.AddRange(_WaveParameters);
             }
 
             _WaveParameters = newArrayList.ToArray();
-            Debug.Log(_WaveParameters.Length);
+            Debug.Log($"Wave count: {_WaveParameters.Length}");
         }
 
         private void Update()
         {
+            if (_StartTime >= _END_TIME)
+            {
+                var average = _DurationCalculation / _CalculationAmount;
+                Debug.Log($"Total: {_DurationCalculation}  Avg: {average}  AvgInMilli: {average.Milliseconds}");
+                return;
+            }
+            
+            _Stopwatch.Start();
+            
             MeshUpdate(out var vertices,out var uvs);
             _Mesh.vertices = vertices;
             _Mesh.uv = uvs;
+            
+            _Stopwatch.Stop();
+            _DurationCalculation += _Stopwatch.Elapsed;
+            _Stopwatch.Reset();
+            _CalculationAmount++;
+
+            _StartTime += Time.deltaTime;
         }
 
         private void Setup()
