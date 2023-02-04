@@ -26,6 +26,7 @@ struct WaveParameter
 
 int mesh_resolution = 1;
 float _TIME_;
+float scaling;
 
 int wave_parameter_count;
 float max_height_amplifier;
@@ -60,17 +61,33 @@ void wave_displacement (int3 id : SV_DispatchThreadID)
 {
     // Skip iterations if the thread ID is invalid
     if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
-    if(id.x >= mesh_resolution || id.z >= mesh_resolution) return;
 
-    const int index = id.x + id.z * mesh_resolution;
-
-    float3 position = id;
-    position.xz -= mesh_resolution >> 1;
+    const int vertexCount = mesh_resolution * mesh_resolution;
+    const int chunkResolution = mesh_resolution >> 1 < 1 ? 1 : mesh_resolution >> 1;
     
-    position += displacement_calculation(position);
+    for(int x = 0; x < chunkResolution; x++)
+    {
+        for(int z = 0; z < chunkResolution; z++)
+        {
+            float3 pos = id;
+            pos.x += x * 32;
+            pos.z += z * 32;
 
-    VerticesOutput[index] = position;
-    UvOutput[index] = position.xz;
+            if(pos.x >= mesh_resolution || pos.z >= mesh_resolution) continue;;
+
+            const int index = pos.x + pos.z * mesh_resolution;
+
+            if(index > vertexCount) continue;
+
+            pos.xz *= scaling;
+            pos.xz -= 5;
+            
+            pos += displacement_calculation(pos);
+
+            VerticesOutput[index] = pos;
+            UvOutput[index] = pos.xz;
+        }
+    }
 }
 
 [numthreads(32,1,32)]
@@ -79,15 +96,27 @@ void triangle_setup (int3 id : SV_DispatchThreadID)
     // Skip iterations if the thread ID is invalid
     if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
 
-    if(id.x >= mesh_resolution - 1 || id.z >= mesh_resolution - 1) return;
+    const int chunkResolution = mesh_resolution >> 1 < 1 ? 1 : mesh_resolution >> 1;
     
-    int index = (id.x + (mesh_resolution - 1) * id.z) * 6;
+    for(int x = 0; x < chunkResolution; x++)
+    {
+        for(int z = 0; z < chunkResolution; z++)
+        {
+            float3 position = id;
+            position.x += x * 32;
+            position.z += z * 32;
 
-    TriangleOutput[index++] = id.x + mesh_resolution * id.z;
-    TriangleOutput[index++] = id.x + mesh_resolution * (id.z + 1);
-    TriangleOutput[index++] = (id.x + 1) + mesh_resolution * (id.z + 1);
+            if(position.x >= mesh_resolution - 1 || position.z >= mesh_resolution - 1) continue;;
+            
+            int index = (position.x + (mesh_resolution - 1) * position.z) * 6;
+            
+            TriangleOutput[index++] = position.x + mesh_resolution * position.z;
+            TriangleOutput[index++] = position.x + mesh_resolution * (position.z + 1);
+            TriangleOutput[index++] = (position.x + 1) + mesh_resolution * (position.z + 1);
 
-    TriangleOutput[index++] = (id.x + 1) + mesh_resolution * (id.z + 1);
-    TriangleOutput[index++] = (id.x + 1) + mesh_resolution * id.z;
-    TriangleOutput[index] = id.x + mesh_resolution * id.z;
+            TriangleOutput[index++] = (position.x + 1) + mesh_resolution * (position.z + 1);
+            TriangleOutput[index++] = (position.x + 1) + mesh_resolution * position.z;
+            TriangleOutput[index] = position.x + mesh_resolution * position.z;
+        }
+    }
 }

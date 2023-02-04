@@ -16,6 +16,7 @@ namespace Version._0._3.Base
         [Space]
         [SerializeField] private MeshFilter _MeshFilter;
         [SerializeField] private float MaxHeightAmplifier = 0;
+        [SerializeField] private float _Scaling = 1;
         [SerializeField] private WaveParameter[] _WaveParameters;
 
         private ComputeBuffer _VerticesBuffer, _UVBuffer, _WaveParameterBuffer;
@@ -28,7 +29,8 @@ namespace Version._0._3.Base
             _MeshResolutionPropertyID = Shader.PropertyToID("mesh_resolution"),
             _WaveParameterBufferPropertyID = Shader.PropertyToID("WaveParameters"),
             _WaveInformationArrayLengthPropertyID = Shader.PropertyToID("wave_parameter_count"),
-            _MaxHeightAmplifierPropertyID = Shader.PropertyToID("max_height_amplifier");
+            _MaxHeightAmplifierPropertyID = Shader.PropertyToID("max_height_amplifier"),
+            _ScalingPropertyId = Shader.PropertyToID("scaling");
 
         private Vector4[] _WaveArray = Array.Empty<Vector4>();
         
@@ -65,6 +67,7 @@ namespace Version._0._3.Base
             _MeshResolution = MeshTable.GetFraction(_VertexCount);
             _ComputeShader.SetInt(_MeshResolutionPropertyID, _MeshResolution);
             _ComputeShader.SetInt(_WaveInformationArrayLengthPropertyID, _WaveParameters.Length);
+            _ComputeShader.SetFloat(_ScalingPropertyId, (10 / (float) _MeshResolution) * _Scaling);
 
             _VerticesBuffer = new ComputeBuffer(_VertexCount, sizeof(float) * 3);
             _UVBuffer = new ComputeBuffer(_VertexCount, sizeof(float) * 2);
