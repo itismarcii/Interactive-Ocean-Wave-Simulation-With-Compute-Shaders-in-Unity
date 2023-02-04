@@ -44,6 +44,7 @@ namespace Version._0._2.Base
         {
             _VerticesBuffer?.Dispose();
             _UVBuffer?.Dispose();
+            _WaveParameterBuffer?.Dispose();
         }
 
         private void Start()
