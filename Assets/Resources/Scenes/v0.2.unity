@@ -480,7 +480,7 @@ MonoBehaviour:
   _ComputeShader: {fileID: 7200000, guid: a7805f397e03b664aae44ce03c398c01, type: 3}
   _MeshFilter: {fileID: 1182787051}
   MaxHeightAmplifier: 0
-  _WaveInformation:
-    Direction: {x: 1, y: 1}
+  _WaveParameters:
+  - Direction: {x: 1, y: 1}
     Amplitude: 1
-    WaveLength: 10
+    WaveLength: 5

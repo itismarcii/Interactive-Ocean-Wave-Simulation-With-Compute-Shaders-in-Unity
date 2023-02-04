@@ -7,14 +7,27 @@
 #define THREAD_GROUP_SIZE_Y 1
 #define THREAD_GROUP_SIZE_Z 32
 
+// Input
+RWStructuredBuffer<float4> WaveParameters;
+
+// Output
 RWStructuredBuffer<float3> VerticesOutput;
 RWStructuredBuffer<float2> UvOutput;
 RWStructuredBuffer<int> TriangleOutput;
 
+
+
+struct WaveParameter
+{
+    float2 direction;
+    float amplitude;
+    float wave_length;
+};
+
 int mesh_resolution = 1;
 float _TIME_;
 
-float4 wave_information;
+int wave_information_count;
 float max_height_amplifier;
 
 float3 gerstner_wave_displacement(const float3 position, float4 wave)
@@ -32,6 +45,16 @@ float3 gerstner_wave_displacement(const float3 position, float4 wave)
         A * direction.y * cos(f));
 }
 
+float3 displacement_calculation(const float3 position)
+{
+    float3 displacement = float3(0,0,0);
+    
+    for (int i = 0; i < wave_information_count; i++)
+         displacement += gerstner_wave_displacement(position, WaveParameters[i]);
+    
+    return displacement;
+}
+
 [numthreads(32,1,32)]
 void wave_displacement (uint3 id : SV_DispatchThreadID)
 {
@@ -42,7 +65,7 @@ void wave_displacement (uint3 id : SV_DispatchThreadID)
     if(position.x >= mesh_resolution || position.z >= mesh_resolution) return;
     
     const int index = position.x + position.z * mesh_resolution;
-    position += gerstner_wave_displacement(position, wave_information);
+    position += displacement_calculation(position);
 
     VerticesOutput[index] = position;
     UvOutput[index] = position.xz;
