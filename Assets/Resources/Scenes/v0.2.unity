@@ -484,3 +484,9 @@ MonoBehaviour:
   - Direction: {x: 1, y: 1}
     Amplitude: 1
     WaveLength: 5
+  - Direction: {x: 0, y: 1}
+    Amplitude: 2
+    WaveLength: 14
+  - Direction: {x: 2, y: 1}
+    Amplitude: 1
+    WaveLength: 6

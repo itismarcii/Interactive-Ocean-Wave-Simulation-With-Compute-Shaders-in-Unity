@@ -56,15 +56,17 @@ float3 displacement_calculation(const float3 position)
 }
 
 [numthreads(32,1,32)]
-void wave_displacement (uint3 id : SV_DispatchThreadID)
+void wave_displacement (int3 id : SV_DispatchThreadID)
 {
     // Skip iterations if the thread ID is invalid
     if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
+    if(id.x >= mesh_resolution || id.z >= mesh_resolution) return;
+
+    const int index = id.x + id.z * mesh_resolution;
 
     float3 position = id;
-    if(position.x >= mesh_resolution || position.z >= mesh_resolution) return;
+    position.xz -= mesh_resolution >> 1;
     
-    const int index = position.x + position.z * mesh_resolution;
     position += displacement_calculation(position);
 
     VerticesOutput[index] = position;
@@ -72,13 +74,12 @@ void wave_displacement (uint3 id : SV_DispatchThreadID)
 }
 
 [numthreads(32,1,32)]
-void triangle_setup (uint3 id : SV_DispatchThreadID)
+void triangle_setup (int3 id : SV_DispatchThreadID)
 {
     // Skip iterations if the thread ID is invalid
     if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
 
-    float3 vertex = id;
-    if(vertex.x < mesh_resolution - 1 && vertex.z < mesh_resolution - 1)
+    if(id.x < mesh_resolution - 1 && id.z < mesh_resolution - 1)
     {
         int index = (id.x + (mesh_resolution - 1) * id.z) * 6;
 

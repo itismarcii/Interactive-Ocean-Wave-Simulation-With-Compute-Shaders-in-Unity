@@ -50,7 +50,23 @@ namespace Version._0._2.Base
         private void Start()
         {
             _Mesh = _MeshFilter.mesh;
+
+            // AlternateArray();
+            
             Setup();
+        }
+
+        private void AlternateArray()
+        {
+            var newArrayList = new List<WaveParameter>();
+
+            for (int i = 0; i < 300; i++)
+            {
+                newArrayList.AddRange(_WaveParameters);
+            }
+
+            _WaveParameters = newArrayList.ToArray();
+            Debug.Log(_WaveParameters.Length);
         }
 
         private void Update()
