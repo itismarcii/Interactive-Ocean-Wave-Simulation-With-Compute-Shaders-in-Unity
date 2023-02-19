@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Extensions;
@@ -10,6 +11,9 @@ namespace Version._0._3.Base
 {
     public class MeshManager : MonoBehaviour
     {
+        [SerializeField] private int _WaveMultiplier = 1;
+        [Space]
+        
         private const int _KERNEL_ID_X = 32, _KERNEL_ID_Y = 1, _KERNEL_ID_Z = 32;
 
         [SerializeField] private ComputeShader _ComputeShader;
@@ -39,6 +43,12 @@ namespace Version._0._3.Base
         private int _VertexCount;
         private Mesh _Mesh;
         
+        private Stopwatch _Stopwatch = new Stopwatch();
+        private float _StartTime = 0;
+        private const int _END_TIME = 60;
+        private int _CalculationAmount = 0;
+        private TimeSpan _DurationCalculation;
+        
         private void OnDisable()
         {
             _VerticesBuffer?.Dispose();
@@ -48,15 +58,45 @@ namespace Version._0._3.Base
 
         private void Start()
         {
+            AlternateArray();
             _Mesh = _MeshFilter.mesh;
             Setup();
         }
         
         private void Update()
         {
+            if (_StartTime >= _END_TIME)
+            {
+                var average = _DurationCalculation / _CalculationAmount;
+                Debug.Log($"Total: {_DurationCalculation}  Avg: {average}  AvgInMilli: {average.Milliseconds}");
+                return;
+            }
+            
+            _Stopwatch.Start();
+
             MeshUpdate(out var vertices,out var uvs);
             _Mesh.vertices = vertices;
             _Mesh.uv = uvs;
+            
+            _Stopwatch.Stop();
+            _DurationCalculation += _Stopwatch.Elapsed;
+            _Stopwatch.Reset();
+            _CalculationAmount++;
+
+            _StartTime += Time.deltaTime;
+        }
+        
+        private void AlternateArray()
+        {
+            var newArrayList = new List<WaveParameter>();
+
+            for (int i = 0; i < _WaveMultiplier; i++)
+            {
+                newArrayList.AddRange(_WaveParameters);
+            }
+
+            _WaveParameters = newArrayList.ToArray();
+            Debug.Log($"Wave count: {_WaveParameters.Length}");
         }
 
         private void Setup()
