@@ -80,18 +80,11 @@ namespace Version._0._4.Grid_Field
                 for (var z = _RowColActiveStart; z < _RowColActiveEnd; z++)
                 {
                     var gridIndex = (int) (x + gridPos.x + (z + gridPos.y) * _GridResolution.y);
-                    if(gridIndex >= _GridCount || gridIndex < 0) continue;
+                    if(gridIndex >= _GridCount || gridIndex < 0 || x + gridPos.x > _GridResolution.x - 1 || x + gridPos.x < 0) continue;
                     var template = MeshGrids[gridIndex];
                     template.SceneObject.SetActive(true);
                     newActiveMesh.Add(template);
                 }
-            }
-
-            
-            
-            for (int i = _RowColActiveStart; i < _RowColActiveEnd; i++)
-            {
-                
             }
 
             ActiveMeshes = newActiveMesh.ToArray();
