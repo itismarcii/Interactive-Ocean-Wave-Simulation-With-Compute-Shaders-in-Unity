@@ -109,7 +109,7 @@ namespace Version._0._4.Base
             
             _ComputeShader.SetInt(_MeshResolutionPropertyID, _MeshResolution);
             _ComputeShader.SetInt(_WaveInformationArrayLengthPropertyID, _WaveParameters.Length);
-            _ComputeShader.SetFloat(_ScalingPropertyId, (10 / (float) _MeshResolution) * _Scaling);
+            _ComputeShader.SetFloat(_ScalingPropertyId, (10 / (float) (_MeshResolution - 1)) * _Scaling);
 
             _VerticesBuffer = new ComputeBuffer(_VertexCount, sizeof(float) * 3);
             _UVBuffer = new ComputeBuffer(_VertexCount, sizeof(float) * 2);
