@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Extensions;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
+using Version._0._4.Grid_Field;
 using Debug = UnityEngine.Debug;
 
 namespace Version._0._4.Base
@@ -40,6 +41,7 @@ namespace Version._0._4.Base
         private float _GlobalTime = 0;
         private int _MeshResolution;
         private Vector3 _MeshScale;
+        private Vector2 _MeshScale2D;
         private int _VertexCount;
         private Mesh _Mesh;
         private Vector2 _GridMeshLengths;
@@ -59,16 +61,13 @@ namespace Version._0._4.Base
 
             _GridMeshLengths = _GridField.GridMeshLengths;
             _MeshScale = _GridField.MeshScale;
-            
-            for (var x = 0; x < _GridMeshLengths.x; x++)
-            {
-                for (var z = 0; z < _GridMeshLengths.y; z++)
-                {
-                    UpdateMesh(
-                        _GridField.GridMeshes[x,z], 
-                        new Vector2(x * _MeshScale.x, z * _MeshScale.z));
-                }
+            _MeshScale2D = new Vector2(_MeshScale.x, _MeshScale.z);
+
+            foreach (var meshGridInfo in _GridField.ActiveMeshes)  
+            { 
+                UpdateMesh(meshGridInfo.GridMesh, meshGridInfo.Shift * _MeshScale2D);
             }
+            
         }
 
         private void Update()
@@ -81,14 +80,9 @@ namespace Version._0._4.Base
             _ComputeShader.SetFloat(_GlobalTimePropertyID, _GlobalTime);
             _ComputeShader.SetFloat(_MaxHeightAmplifierPropertyID, MaxHeightAmplifier);
             
-            for (var x = 0; x < _GridMeshLengths.x; x++)
+            foreach (var meshGridInfo in _GridField.ActiveMeshes)  
             {
-                for (var z = 0; z < _GridMeshLengths.y; z++)
-                {
-                    UpdateMesh(
-                        _GridField.GridMeshes[x,z], 
-                        new Vector2(x * _MeshScale.x, z * _MeshScale.z));
-                }
+                UpdateMesh(meshGridInfo.GridMesh, meshGridInfo.Shift * _MeshScale2D);
             }
             
             _GlobalTime += Time.deltaTime;
