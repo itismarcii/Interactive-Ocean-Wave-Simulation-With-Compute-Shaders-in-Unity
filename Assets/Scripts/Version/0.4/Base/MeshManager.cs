@@ -1,24 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Extensions;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using Debug = UnityEngine.Debug;
 
 namespace Version._0._4.Base
 {
     public class MeshManager : MonoBehaviour
     {
-        [SerializeField] private int _WaveMultiplier = 1;
-        [Space]
-        
         private const int _KERNEL_ID_X = 32, _KERNEL_ID_Y = 1, _KERNEL_ID_Z = 32;
 
+        [SerializeField] private GridField _GridField;
         [SerializeField] private ComputeShader _ComputeShader;
         [Space]
-        [SerializeField] private MeshFilter _MeshFilter;
+        // [SerializeField] private MeshFilter _MeshFilter;
         [SerializeField] private float MaxHeightAmplifier = 0;
         [SerializeField] private float _Scaling = 1;
         [SerializeField] private WaveParameter[] _WaveParameters;
@@ -34,20 +32,17 @@ namespace Version._0._4.Base
             _WaveParameterBufferPropertyID = Shader.PropertyToID("WaveParameters"),
             _WaveInformationArrayLengthPropertyID = Shader.PropertyToID("wave_parameter_count"),
             _MaxHeightAmplifierPropertyID = Shader.PropertyToID("max_height_amplifier"),
-            _ScalingPropertyId = Shader.PropertyToID("scaling");
+            _ScalingPropertyId = Shader.PropertyToID("scaling"),
+            _MeshShiftPropertyId = Shader.PropertyToID("meshShift");
 
         private Vector4[] _WaveArray = Array.Empty<Vector4>();
         
         private float _GlobalTime = 0;
         private int _MeshResolution;
+        private Vector3 _MeshScale;
         private int _VertexCount;
         private Mesh _Mesh;
-        
-        private Stopwatch _Stopwatch = new Stopwatch();
-        private float _StartTime = 0;
-        private const int _END_TIME = 60;
-        private int _CalculationAmount = 0;
-        private TimeSpan _DurationCalculation;
+        private Vector2 _GridMeshLengths;
         
         private void OnDisable()
         {
@@ -58,53 +53,60 @@ namespace Version._0._4.Base
 
         private void Start()
         {
-            AlternateArray();
-            _Mesh = _MeshFilter.mesh;
-            Setup();
+            MeshTable.SetupTable(1000);
+            Setup(_GridField.PrefabMesh);
+            _GridField.GenerateGridField();
+
+            _GridMeshLengths = _GridField.GridMeshLengths;
+            _MeshScale = _GridField.MeshScale;
+            
+            for (var x = 0; x < _GridMeshLengths.x; x++)
+            {
+                for (var z = 0; z < _GridMeshLengths.y; z++)
+                {
+                    UpdateMesh(
+                        _GridField.GridMeshes[x,z], 
+                        new Vector2(x * _MeshScale.x, z * _MeshScale.z));
+                }
+            }
         }
-        
+
         private void Update()
         {
-            if (_StartTime >= _END_TIME)
+            UpdateGrid();
+        }
+
+        private void UpdateGrid()
+        {
+            _ComputeShader.SetFloat(_GlobalTimePropertyID, _GlobalTime);
+            _ComputeShader.SetFloat(_MaxHeightAmplifierPropertyID, MaxHeightAmplifier);
+            
+            for (var x = 0; x < _GridMeshLengths.x; x++)
             {
-                var average = _DurationCalculation / _CalculationAmount;
-                Debug.Log($"Total: {_DurationCalculation}  Avg: {average}  AvgInMilli: {average.Milliseconds}");
-                return;
+                for (var z = 0; z < _GridMeshLengths.y; z++)
+                {
+                    UpdateMesh(
+                        _GridField.GridMeshes[x,z], 
+                        new Vector2(x * _MeshScale.x, z * _MeshScale.z));
+                }
             }
             
-            _Stopwatch.Start();
+            _GlobalTime += Time.deltaTime;
+        }
 
-            MeshUpdate(out var vertices,out var uvs);
-            _Mesh.vertices = vertices;
-            _Mesh.uv = uvs;
-            
-            _Stopwatch.Stop();
-            _DurationCalculation += _Stopwatch.Elapsed;
-            _Stopwatch.Reset();
-            _CalculationAmount++;
-
-            _StartTime += Time.deltaTime;
+        private void UpdateMesh(Mesh mesh, Vector2 shift)
+        {
+            MeshUpdate(out var vertices,out var uvs, in shift);
+            mesh.vertices = vertices;
+            mesh.uv = uvs;
         }
         
-        private void AlternateArray()
+        private void Setup(Mesh mesh)
         {
-            var newArrayList = new List<WaveParameter>();
-
-            for (int i = 0; i < _WaveMultiplier; i++)
-            {
-                newArrayList.AddRange(_WaveParameters);
-            }
-
-            _WaveParameters = newArrayList.ToArray();
-            Debug.Log($"Wave count: {_WaveParameters.Length}");
-        }
-
-        private void Setup()
-        {
-            MeshTable.SetupTable(1000);
-
-            _VertexCount = _Mesh.vertexCount;
+            _Mesh = mesh;
+            _VertexCount = mesh.vertexCount;
             _MeshResolution = MeshTable.GetFraction(_VertexCount);
+            
             _ComputeShader.SetInt(_MeshResolutionPropertyID, _MeshResolution);
             _ComputeShader.SetInt(_WaveInformationArrayLengthPropertyID, _WaveParameters.Length);
             _ComputeShader.SetFloat(_ScalingPropertyId, (10 / (float) _MeshResolution) * _Scaling);
@@ -114,14 +116,13 @@ namespace Version._0._4.Base
             _WaveParameterBuffer = new ComputeBuffer(_WaveParameters.Length, sizeof(float) * 5);
 
             using var triangleBuffer = new ComputeBuffer(_VertexCount * 3, sizeof(int));
-                _MeshFilter.mesh.triangles = GetBufferData(1, triangleBuffer, _TriangleOutputBufferPropertyID,
-                    _MeshFilter.mesh.triangles);
+                mesh.triangles = GetBufferData(1, triangleBuffer, _TriangleOutputBufferPropertyID, mesh.triangles);
+
         }
         
-        private void MeshUpdate(out Vector3[] vertices, out Vector2[] uvs)
+        private void MeshUpdate(out Vector3[] vertices, out Vector2[] uvs, in Vector2 shift)
         {
-            _ComputeShader.SetFloat(_GlobalTimePropertyID, _GlobalTime);
-            _ComputeShader.SetFloat(_MaxHeightAmplifierPropertyID, MaxHeightAmplifier);
+            _ComputeShader.SetVector(_MeshShiftPropertyId, shift);
             _WaveParameterBuffer.SetData(_WaveParameters);
 
             _ComputeShader.SetBuffer(0, _VerticesOutputBufferPropertyID, _VerticesBuffer);
@@ -134,8 +135,6 @@ namespace Version._0._4.Base
             
             _VerticesBuffer.GetData(vertices);
             _UVBuffer.GetData(uvs);
-            
-            _GlobalTime += Time.deltaTime;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

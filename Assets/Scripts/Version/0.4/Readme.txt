@@ -1,1 +1,1 @@
-v0.3 : Implementation of a chunk system on the Compute Shader for variations of mesh sizes
+v0.4 : Implementation of a gird field for our ocean surface meshes
