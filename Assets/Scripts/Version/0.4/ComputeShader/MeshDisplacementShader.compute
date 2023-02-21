@@ -28,6 +28,7 @@ int mesh_resolution = 1;
 float _TIME_;
 float scaling;
 float2 meshShift;
+float meshCenter;
 
 int wave_parameter_count;
 float max_height_amplifier;
@@ -81,7 +82,7 @@ void wave_displacement (int3 id : SV_DispatchThreadID)
             if(index > vertexCount) continue;
 
             pos.xz *= scaling;
-            pos.xz -= 5;
+            pos.xz -= meshCenter;
             pos.xz += meshShift.xy;
             
             pos += displacement_calculation(pos);

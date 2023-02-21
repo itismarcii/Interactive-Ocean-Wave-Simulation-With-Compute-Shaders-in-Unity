@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Extensions;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 using Version._0._4.Grid_Field;
 using Debug = UnityEngine.Debug;
 
@@ -17,12 +16,14 @@ namespace Version._0._4.Base
         [SerializeField] private GridField _GridField;
         [SerializeField] private ComputeShader _ComputeShader;
         [Space]
-        // [SerializeField] private MeshFilter _MeshFilter;
-        [SerializeField] private float MaxHeightAmplifier = 0;
+        [SerializeField] private float MaxHeightAmplifier;
         [SerializeField] private float _Scaling = 1;
         [SerializeField] private WaveParameter[] _WaveParameters;
 
-        private ComputeBuffer _VerticesBuffer, _UVBuffer, _WaveParameterBuffer;
+        private ComputeBuffer 
+            _VerticesBufferInnerCircle, _VerticesBufferMiddleCircle, _VerticesBufferOuterCircle, 
+            _UVBufferInnerCircle, _UVBufferMiddleCircle, _UVBufferOuterCircle,
+            _WaveParameterBuffer;
 
         private readonly int
             _VerticesOutputBufferPropertyID = Shader.PropertyToID("VerticesOutput"),
@@ -34,40 +35,38 @@ namespace Version._0._4.Base
             _WaveInformationArrayLengthPropertyID = Shader.PropertyToID("wave_parameter_count"),
             _MaxHeightAmplifierPropertyID = Shader.PropertyToID("max_height_amplifier"),
             _ScalingPropertyId = Shader.PropertyToID("scaling"),
-            _MeshShiftPropertyId = Shader.PropertyToID("meshShift");
-
-        private Vector4[] _WaveArray = Array.Empty<Vector4>();
+            _MeshShiftPropertyId = Shader.PropertyToID("meshShift"),
+            _MeshCenterShiftPropertyId = Shader.PropertyToID("meshCenter");
         
-        private float _GlobalTime = 0;
+        private static float _GlobalTime;
         private int _MeshResolution;
         private Vector3 _MeshScale;
         private Vector2 _MeshScale2D;
         private int _VertexCount;
         private Mesh _Mesh;
-        private Vector2 _GridMeshLengths;
         
         private void OnDisable()
         {
-            _VerticesBuffer?.Dispose();
-            _UVBuffer?.Dispose();
+            _VerticesBufferInnerCircle?.Dispose();
+            _VerticesBufferMiddleCircle?.Dispose();
+            _VerticesBufferOuterCircle?.Dispose();
+            
+            _UVBufferInnerCircle?.Dispose();
+            _UVBufferMiddleCircle?.Dispose();
+            _UVBufferOuterCircle?.Dispose();
+            
             _WaveParameterBuffer?.Dispose();
         }
 
         private void Start()
         {
             MeshTable.SetupTable(1000);
-            Setup(_GridField.PrefabMesh);
+            _GridField.SetScaling(_Scaling);
             _GridField.GenerateGridField();
+            Setup();
 
-            _GridMeshLengths = _GridField.GridMeshLengths;
             _MeshScale = _GridField.MeshScale;
             _MeshScale2D = new Vector2(_MeshScale.x, _MeshScale.z);
-
-            foreach (var meshGridInfo in _GridField.ActiveMeshes)  
-            { 
-                UpdateMesh(meshGridInfo.GridMesh, meshGridInfo.Shift * _MeshScale2D);
-            }
-            
         }
 
         private void Update()
@@ -80,57 +79,87 @@ namespace Version._0._4.Base
             _ComputeShader.SetFloat(_GlobalTimePropertyID, _GlobalTime);
             _ComputeShader.SetFloat(_MaxHeightAmplifierPropertyID, MaxHeightAmplifier);
             
-            foreach (var meshGridInfo in _GridField.ActiveMeshes)  
-            {
-                UpdateMesh(meshGridInfo.GridMesh, meshGridInfo.Shift * _MeshScale2D);
-            }
-            
+            foreach (var meshGridInfo in _GridField.ActiveMeshes)
+                UpdateMesh(meshGridInfo);
+
             _GlobalTime += Time.deltaTime;
         }
 
-        private void UpdateMesh(Mesh mesh, Vector2 shift)
+        private void UpdateMesh(MeshGrid meshInfo)
         {
-            MeshUpdate(out var vertices,out var uvs, in shift);
-            mesh.vertices = vertices;
-            mesh.uv = uvs;
-        }
-        
-        private void Setup(Mesh mesh)
-        {
-            _Mesh = mesh;
-            _VertexCount = mesh.vertexCount;
-            _MeshResolution = MeshTable.GetFraction(_VertexCount);
+            var shift = meshInfo.MeshShift * _MeshScale2D;
             
-            _ComputeShader.SetInt(_MeshResolutionPropertyID, _MeshResolution);
-            _ComputeShader.SetInt(_WaveInformationArrayLengthPropertyID, _WaveParameters.Length);
-            _ComputeShader.SetFloat(_ScalingPropertyId, (10 / (float) (_MeshResolution - 1)) * _Scaling);
+            switch (meshInfo.CircleStage)
+            {
+                case MeshGrid.Circle._Inner_:
+                    UpdateMesh(meshInfo, shift, _VerticesBufferInnerCircle, _UVBufferInnerCircle);
+                    return;
+                case MeshGrid.Circle._Middle_:
+                    UpdateMesh(meshInfo, shift, _VerticesBufferMiddleCircle, _UVBufferMiddleCircle);
+                    return;
+                case MeshGrid.Circle._Outer_:
+                    UpdateMesh(meshInfo, shift, _VerticesBufferOuterCircle, _UVBufferOuterCircle);
+                    return;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
-            _VerticesBuffer = new ComputeBuffer(_VertexCount, sizeof(float) * 3);
-            _UVBuffer = new ComputeBuffer(_VertexCount, sizeof(float) * 2);
-            _WaveParameterBuffer = new ComputeBuffer(_WaveParameters.Length, sizeof(float) * 5);
-
-            using var triangleBuffer = new ComputeBuffer(_VertexCount * 3, sizeof(int));
-                mesh.triangles = GetBufferData(1, triangleBuffer, _TriangleOutputBufferPropertyID, mesh.triangles);
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateMesh(MeshGrid meshInfo, Vector2 shift , in ComputeBuffer verticesBuffer, in ComputeBuffer uvBuffer)
+        {
+            MeshUpdate(out var vertices, out var uvs, in shift, meshInfo.Resolution, 
+                verticesBuffer, uvBuffer, meshInfo.VertexCount);
+            
+            meshInfo.GridMesh.vertices = vertices;
+            meshInfo.GridMesh.uv = uvs;
         }
         
-        private void MeshUpdate(out Vector3[] vertices, out Vector2[] uvs, in Vector2 shift)
+        private void Setup()
+        {            
+            _ComputeShader.SetFloat(_MeshCenterShiftPropertyId, (_GridField.MeshScale.x * _Scaling) / 2);
+            _ComputeShader.SetInt(_WaveInformationArrayLengthPropertyID, _WaveParameters.Length);
+            
+            foreach (var meshGrid in _GridField.MeshGridList)
+            {
+                var mesh = meshGrid.GridMesh;
+                _ComputeShader.SetInt(_MeshResolutionPropertyID, meshGrid.Resolution);
+                
+                using var triangleBuffer = new ComputeBuffer(meshGrid.VertexCount * 3, sizeof(int));
+                    mesh.triangles = GetBufferData(1, triangleBuffer, _TriangleOutputBufferPropertyID, mesh.triangles);
+            }
+
+            _VerticesBufferInnerCircle = new ComputeBuffer(_GridField.InnerMesh.vertexCount, sizeof(float) * 3);
+            _VerticesBufferMiddleCircle = new ComputeBuffer(_GridField.MiddleMesh.vertexCount, sizeof(float) * 3);
+            _VerticesBufferOuterCircle = new ComputeBuffer(_GridField.OuterMesh.vertexCount, sizeof(float) * 3);
+            
+            _UVBufferInnerCircle = new ComputeBuffer(_GridField.InnerMesh.vertexCount, sizeof(float) * 2);
+            _UVBufferMiddleCircle = new ComputeBuffer(_GridField.MiddleMesh.vertexCount, sizeof(float) * 2);
+            _UVBufferOuterCircle = new ComputeBuffer(_GridField.OuterMesh.vertexCount, sizeof(float) * 2);
+
+            _WaveParameterBuffer = new ComputeBuffer(_WaveParameters.Length, sizeof(float) * 5);
+        }
+
+        private void MeshUpdate(out Vector3[] vertices, out Vector2[] uvs, in Vector2 shift, int meshResolution,
+            in ComputeBuffer verticesBuffer, in ComputeBuffer uvBuffer, int vertexCount)
         {
             _ComputeShader.SetVector(_MeshShiftPropertyId, shift);
             _WaveParameterBuffer.SetData(_WaveParameters);
+            _ComputeShader.SetInt(_MeshResolutionPropertyID, meshResolution);
+            _ComputeShader.SetFloat(_ScalingPropertyId, (10 / (float) (meshResolution - 1)) * _Scaling);
 
-            _ComputeShader.SetBuffer(0, _VerticesOutputBufferPropertyID, _VerticesBuffer);
-            _ComputeShader.SetBuffer(0, _UVOutputBufferPropertyID, _UVBuffer);
+            _ComputeShader.SetBuffer(0, _VerticesOutputBufferPropertyID, verticesBuffer);
+            _ComputeShader.SetBuffer(0, _UVOutputBufferPropertyID, uvBuffer);
             _ComputeShader.SetBuffer(0, _WaveParameterBufferPropertyID, _WaveParameterBuffer);
             _ComputeShader.Dispatch(0, 32, 1, 32);
-            
-            vertices = new Vector3[_VertexCount];
-            uvs = new Vector2[_VertexCount];
-            
-            _VerticesBuffer.GetData(vertices);
-            _UVBuffer.GetData(uvs);
+
+            vertices = new Vector3[vertexCount];
+            uvs = new Vector2[vertexCount];
+
+            verticesBuffer.GetData(vertices);
+            uvBuffer.GetData(uvs);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T[] GetBufferData<T>(int kernel, ComputeBuffer buffer, int propertyId, IReadOnlyCollection<T> data)
         {
