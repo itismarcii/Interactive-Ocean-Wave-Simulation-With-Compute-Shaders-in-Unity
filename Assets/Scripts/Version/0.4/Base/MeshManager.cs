@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Extensions;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Version._0._4.Grid_Field;
 using Debug = UnityEngine.Debug;
 
@@ -108,13 +109,47 @@ namespace Version._0._4.Base
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateMesh(MeshGrid meshInfo, Vector2 shift , in ComputeBuffer verticesBuffer, in ComputeBuffer uvBuffer)
         {
-            MeshUpdate(out var vertices, out var uvs, in shift, meshInfo.Resolution, 
-                verticesBuffer, uvBuffer, meshInfo.VertexCount);
-            
-            meshInfo.GridMesh.vertices = vertices;
-            meshInfo.GridMesh.uv = uvs;
+            MeshUpdate(meshInfo, shift, in verticesBuffer, in uvBuffer);
         }
-        
+
+        private void MeshUpdate(MeshGrid meshInfo, Vector2 shift, in ComputeBuffer verticesBuffer, in ComputeBuffer uvBuffer)
+        {
+            _ComputeShader.SetVector(_MeshShiftPropertyId, shift);
+            _WaveParameterBuffer.SetData(_WaveParameters);
+            _ComputeShader.SetInt(_MeshResolutionPropertyID, meshInfo.Resolution);
+            _ComputeShader.SetFloat(_ScalingPropertyId, (10 / (float) (meshInfo.Resolution - 1)) * _Scaling);
+
+            _ComputeShader.SetBuffer(0, _VerticesOutputBufferPropertyID, verticesBuffer);
+            _ComputeShader.SetBuffer(0, _UVOutputBufferPropertyID, uvBuffer);
+            _ComputeShader.SetBuffer(0, _WaveParameterBufferPropertyID, _WaveParameterBuffer);
+            _ComputeShader.Dispatch(0, 32, 1, 32);
+
+            AsyncGPUReadback.Request(verticesBuffer, (request) =>
+            {
+                try
+                {
+                    meshInfo.GridMesh.vertices = request.GetData<Vector3>().ToArray();
+                }
+                catch (Exception e) 
+                { 
+                    // ignored
+                }
+                
+            });
+            
+            AsyncGPUReadback.Request(uvBuffer, (request) =>
+            {
+                try
+                {
+                    meshInfo.GridMesh.uv = request.GetData<Vector2>().ToArray();
+                }
+                catch (Exception e)
+                {
+                    // ignored
+                }
+            });
+        }
+
         private void Setup()
         {            
             _ComputeShader.SetFloat(_MeshCenterShiftPropertyId, (_GridField.MeshScale.x * _Scaling) / 2);
@@ -138,26 +173,6 @@ namespace Version._0._4.Base
             _UVBufferOuterCircle = new ComputeBuffer(_GridField.OuterMesh.vertexCount, sizeof(float) * 2);
 
             _WaveParameterBuffer = new ComputeBuffer(_WaveParameters.Length, sizeof(float) * 5);
-        }
-
-        private void MeshUpdate(out Vector3[] vertices, out Vector2[] uvs, in Vector2 shift, int meshResolution,
-            in ComputeBuffer verticesBuffer, in ComputeBuffer uvBuffer, int vertexCount)
-        {
-            _ComputeShader.SetVector(_MeshShiftPropertyId, shift);
-            _WaveParameterBuffer.SetData(_WaveParameters);
-            _ComputeShader.SetInt(_MeshResolutionPropertyID, meshResolution);
-            _ComputeShader.SetFloat(_ScalingPropertyId, (10 / (float) (meshResolution - 1)) * _Scaling);
-
-            _ComputeShader.SetBuffer(0, _VerticesOutputBufferPropertyID, verticesBuffer);
-            _ComputeShader.SetBuffer(0, _UVOutputBufferPropertyID, uvBuffer);
-            _ComputeShader.SetBuffer(0, _WaveParameterBufferPropertyID, _WaveParameterBuffer);
-            _ComputeShader.Dispatch(0, 32, 1, 32);
-
-            vertices = new Vector3[vertexCount];
-            uvs = new Vector2[vertexCount];
-
-            verticesBuffer.GetData(vertices);
-            uvBuffer.GetData(uvs);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

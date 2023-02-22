@@ -475,11 +475,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c16e9ea7680d464488a5085ae52aa627, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _GridResolution: {x: 100, y: 100}
+  _GridResolution: {x: 10, y: 10}
   _PrefabMeshInnerCircle: {fileID: 5287891414714085975, guid: 1b96615c39c716b4c8c805778a2d22ea, type: 3}
   _InnerRingSize: 3
   _PrefabMeshMiddleCircle: {fileID: 6567309684816117969, guid: 091149a948bb51d43a74531e14404ecd, type: 3}
-  _MiddleRingSize: 5
+  _MiddleRingSize: 4
   _PrefabMeshOuterCircle: {fileID: 6317734247337604008, guid: e46007360eda22a47b626275481fadb0, type: 3}
   _OuterRingSize: 7
   _InactiveReplacement: {fileID: 6317734247337604008, guid: e46007360eda22a47b626275481fadb0, type: 3}
