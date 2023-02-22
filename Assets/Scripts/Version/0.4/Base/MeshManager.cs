@@ -106,13 +106,7 @@ namespace Version._0._4.Base
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateMesh(MeshGrid meshInfo, Vector2 shift , in ComputeBuffer verticesBuffer, in ComputeBuffer uvBuffer)
-        {
-            MeshUpdate(meshInfo, shift, in verticesBuffer, in uvBuffer);
-        }
-
-        private void MeshUpdate(MeshGrid meshInfo, Vector2 shift, in ComputeBuffer verticesBuffer, in ComputeBuffer uvBuffer)
         {
             _ComputeShader.SetVector(_MeshShiftPropertyId, shift);
             _WaveParameterBuffer.SetData(_WaveParameters);
