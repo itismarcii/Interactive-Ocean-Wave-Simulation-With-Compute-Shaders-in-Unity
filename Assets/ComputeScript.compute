@@ -1,0 +1,13 @@
+#pragma kernel CSMain 0
+
+RWStructuredBuffer<float3> input_data_buffer, output_data_buffer;
+
+float multiply_value;
+
+[numthreads(4,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float3 data = input_data_buffer[id.x];
+    data.y = data.x * multiply_value;
+    output_data_buffer[id.x] = data;   
+}

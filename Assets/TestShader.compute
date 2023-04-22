@@ -1,0 +1,37 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+RWStructuredBuffer<float4> VerticesOutput;
+RWStructuredBuffer<float3> VerticesMeshBuildup;
+RWStructuredBuffer<int> TrianglesOutput;
+RWStructuredBuffer<float2> UvOutput;
+
+const int mesh_resolution = 16;
+
+[numthreads(32,1,32)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float4 position;
+    position.w = 1;
+    position.xyz = id;
+
+    float index = position.x + position.z * mesh_resolution;
+    if(id.x < mesh_resolution && id.z < mesh_resolution)
+    {
+        VerticesOutput[index] = position;
+        VerticesMeshBuildup[index] = position;
+        UvOutput[index] = position.xz;
+    }
+
+    if (position.x >= mesh_resolution - 1 || position.z >= mesh_resolution - 1) return;
+
+    index = (position.x + (mesh_resolution - 1) * position.z) * 6;
+
+    TrianglesOutput[index++] = position.x + mesh_resolution * position.z;
+    TrianglesOutput[index++] = position.x + mesh_resolution * (position.z + 1);
+    TrianglesOutput[index++] = (position.x + 1) + mesh_resolution * (position.z + 1);
+
+    TrianglesOutput[index++] = (position.x + 1) + mesh_resolution * (position.z + 1);
+    TrianglesOutput[index++] = (position.x + 1) + mesh_resolution * position.z;
+    TrianglesOutput[index] = position.x + mesh_resolution * position.z;
+}
