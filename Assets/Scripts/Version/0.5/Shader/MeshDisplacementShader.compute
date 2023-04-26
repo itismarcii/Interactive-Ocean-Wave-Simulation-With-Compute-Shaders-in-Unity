@@ -22,6 +22,7 @@ RWStructuredBuffer<WaveParameter> WaveParameters;
 RWStructuredBuffer<float3> VerticesOutput;
 RWStructuredBuffer<int> TriangleOutput;
 
+Texture2D gaussianNoise;
 
 int mesh_resolution = 1;
 float _TIME_;
@@ -62,9 +63,9 @@ float3 fft_calculation(const float3 position, float wave_length, float spectrum)
     return float3(position.x, wave_height, position.z);
 }
 
-float3 displacement_calculation(const float3 position)
+float3 displacement_calculation(const float3 position, const float noise)
 {
-    float3 displacement = float3(0,0,0);
+    float3 displacement = float3(0,noise,0);
     
     for (int i = 0; i < wave_parameter_count; i++)
         displacement += gerstner_wave_displacement(position, WaveParameters[i]);
@@ -100,12 +101,14 @@ void wave_displacement (int3 id : SV_DispatchThreadID)
             const int index = pos.x + pos.z * mesh_resolution;
 
             if(index > vertexCount) continue;
-
-            pos.xz *= scaling;
-            pos.xz -= meshCenter;
-            pos.xz += meshShift.xy;
             
-            pos += displacement_calculation(pos);
+            pos.xz *= scaling;
+            pos.xz += meshShift.xy;
+            float4 noise = gaussianNoise.Load(int3(pos.xz, 0));
+            pos.xz -= meshCenter;
+
+            pos += displacement_calculation(pos, noise.y);
+
             pos.xz -= meshShift.xy;
 
             VerticesOutput[index] = pos;

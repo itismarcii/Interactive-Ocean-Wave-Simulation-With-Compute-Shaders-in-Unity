@@ -35,7 +35,8 @@ namespace Version._0._5.Base
             _MaxHeightAmplifierPropertyID = Shader.PropertyToID("max_height_amplifier"),
             _ScalingPropertyId = Shader.PropertyToID("scaling"),
             _MeshShiftPropertyId = Shader.PropertyToID("meshShift"),
-            _MeshCenterShiftPropertyId = Shader.PropertyToID("meshCenter");
+            _MeshCenterShiftPropertyId = Shader.PropertyToID("meshCenter"),
+            _GaussianNoisePorpertyId = Shader.PropertyToID("gaussianNoise");
 
         private float _GlobalTime = 0;
 
@@ -96,6 +97,14 @@ namespace Version._0._5.Base
         public void SetCenter(float center) => _ComputeShader.SetFloat(_MeshCenterShiftPropertyId, center);
         public void IncreaseTime() => _GlobalTime += Time.deltaTime;
         public void SetGlobalTime() => _ComputeShader.SetFloat(_GlobalTimePropertyID, _GlobalTime);
+
+        public void SetGuassianNoise(Texture2D texture2D)
+        {
+            // RenderTexture renderTexture =
+            //     new RenderTexture(texture2D.width, texture2D.height, 0, RenderTextureFormat.ARGB32);
+            _ComputeShader.SetTexture(0, _GaussianNoisePorpertyId, texture2D);
+            // Destroy(renderTexture);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T[] GetBufferData<T>(int kernel, ComputeBuffer buffer, int propertyId, IReadOnlyCollection<T> data)
