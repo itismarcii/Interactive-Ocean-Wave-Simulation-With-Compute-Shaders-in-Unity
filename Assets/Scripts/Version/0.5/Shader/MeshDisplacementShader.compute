@@ -1,0 +1,145 @@
+#pragma kernel wave_displacement 0
+#pragma kernel triangle_setup 1
+
+#define PI 3.14159265358979323846
+
+#define THREAD_GROUP_SIZE_X 32
+#define THREAD_GROUP_SIZE_Y 1
+#define THREAD_GROUP_SIZE_Z 32
+
+struct WaveParameter
+{
+    float2 direction;
+    float amplitude;
+    float wave_length;
+    float speedModifer;
+};
+
+// Input
+RWStructuredBuffer<WaveParameter> WaveParameters;
+
+// Output
+RWStructuredBuffer<float3> VerticesOutput;
+RWStructuredBuffer<int> TriangleOutput;
+
+
+int mesh_resolution = 1;
+float _TIME_;
+float scaling;
+float2 meshShift;
+float meshCenter;
+
+int wave_parameter_count;
+float max_height_amplifier;
+
+float3 gerstner_wave_displacement(const float3 position, WaveParameter wave)
+{
+    const float maxHeight = (wave.wave_length / 7) + max_height_amplifier;                  // Clamped max Height
+    const float k = 2 * PI / wave.wave_length;                                              // Wave Number
+    const float A = wave.amplitude * 2 > maxHeight ? maxHeight / 2 : wave.amplitude;     // Amplitude
+    // const float A = wave.amplitude;                                                         // Amplitude
+    const float c = sqrt(PI / k);                                                           // Wave Speed
+    const float2 direction = normalize(wave.direction);                                     // Normalized Wave Direction
+    const float f = k * dot(direction, position.xz) - (c * _TIME_) * wave.speedModifer;     // Wave Phase
+
+    return float3(                                                                          // Displacement
+        A * direction.x * cos(f),
+        A * sin(f),
+        A * direction.y * cos(f));
+}
+
+float3 fft_calculation(const float3 position, float wave_length, float spectrum)
+{
+    float2 x = position.xz;
+
+    float2 h_hat = spectrum;
+    float k = 2 * PI / wave_length;
+    float k_dot_pos = dot(k, x);
+    float2 exp_term = float2(cos(k_dot_pos), sin(k_dot_pos));
+    float2 h_prod = h_hat * exp_term;
+    float wave_height = dot(h_prod, float2(1,0));
+    
+    return float3(position.x, wave_height, position.z);
+}
+
+float3 displacement_calculation(const float3 position)
+{
+    float3 displacement = float3(0,0,0);
+    
+    for (int i = 0; i < wave_parameter_count; i++)
+        displacement += gerstner_wave_displacement(position, WaveParameters[i]);
+
+    // for (int i = 0; i < wave_parameter_count; i++)
+    // {
+    //     const float wave_height_time = gerstner_wave_displacement(position, WaveParameters[i]).y;
+    //     displacement += fft_calculation(position, WaveParameters[i].wave_length, wave_height_time);
+    // }
+        
+    return displacement;
+}
+
+[numthreads(32,1,32)]
+void wave_displacement (int3 id : SV_DispatchThreadID)
+{
+    // Skip iterations if the thread ID is invalid
+    if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
+
+    const int vertexCount = mesh_resolution * mesh_resolution;
+    const int chunkResolution = mesh_resolution >> 1 < 1 ? 1 : mesh_resolution >> 1;
+    
+    for(int x = 0; x < chunkResolution; x++)
+    {
+        for(int z = 0; z < chunkResolution; z++)
+        {
+            float3 pos = id;
+            pos.x += x * 32;
+            pos.z += z * 32;
+
+            if(pos.x >= mesh_resolution || pos.z >= mesh_resolution) continue;;
+
+            const int index = pos.x + pos.z * mesh_resolution;
+
+            if(index > vertexCount) continue;
+
+            pos.xz *= scaling;
+            pos.xz -= meshCenter;
+            pos.xz += meshShift.xy;
+            
+            pos += displacement_calculation(pos);
+            pos.xz -= meshShift.xy;
+
+            VerticesOutput[index] = pos;
+        }
+    }
+}
+
+[numthreads(32,1,32)]
+void triangle_setup (int3 id : SV_DispatchThreadID)
+{
+    // Skip iterations if the thread ID is invalid
+    if(id.x > THREAD_GROUP_SIZE_X || id.y > THREAD_GROUP_SIZE_Y || id.z > THREAD_GROUP_SIZE_Z) return;
+
+    const int chunkResolution = mesh_resolution >> 1 < 1 ? 1 : mesh_resolution >> 1;
+    
+    for(int x = 0; x < chunkResolution; x++)
+    {
+        for(int z = 0; z < chunkResolution; z++)
+        {
+            float3 position = id;
+            position.x += x * 32;
+            position.z += z * 32;
+
+            if(position.x >= mesh_resolution - 1 || position.z >= mesh_resolution - 1) continue;;
+            
+            int index = (position.x + (mesh_resolution - 1) * position.z) * 6;
+            
+            TriangleOutput[index++] = position.x + mesh_resolution * position.z;
+            TriangleOutput[index++] = position.x + mesh_resolution * (position.z + 1);
+            TriangleOutput[index++] = (position.x + 1) + mesh_resolution * (position.z + 1);
+
+            TriangleOutput[index++] = (position.x + 1) + mesh_resolution * (position.z + 1);
+            TriangleOutput[index++] = (position.x + 1) + mesh_resolution * position.z;
+            TriangleOutput[index] = position.x + mesh_resolution * position.z;
+        }
+    }
+}
