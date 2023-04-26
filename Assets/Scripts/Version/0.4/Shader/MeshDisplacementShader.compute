@@ -36,7 +36,8 @@ float3 gerstner_wave_displacement(const float3 position, WaveParameter wave)
 {
     const float maxHeight = (wave.wave_length / 7) + max_height_amplifier;                  // Clamped max Height
     const float k = 2 * PI / wave.wave_length;                                              // Wave Number
-    const float A = wave.amplitude * 2 > maxHeight ? maxHeight / 2 : wave.amplitude;        // Amplitude
+    const float A = wave.amplitude * 2 > maxHeight ? maxHeight / 2 : wave.amplitude;     // Amplitude
+    // const float A = wave.amplitude;                                                         // Amplitude
     const float c = sqrt(PI / k);                                                           // Wave Speed
     const float2 direction = normalize(wave.direction);                                     // Normalized Wave Direction
     const float f = k * dot(direction, position.xz) - (c * _TIME_) * wave.speedModifer;     // Wave Phase
@@ -47,13 +48,33 @@ float3 gerstner_wave_displacement(const float3 position, WaveParameter wave)
         A * direction.y * cos(f));
 }
 
+float3 fft_calculation(const float3 position, float wave_length, float spectrum)
+{
+    float2 x = position.xz;
+
+    float2 h_hat = spectrum;
+    float k = 2 * PI / wave_length;
+    float k_dot_pos = dot(k, x);
+    float2 exp_term = float2(cos(k_dot_pos), sin(k_dot_pos));
+    float2 h_prod = h_hat * exp_term;
+    float wave_height = dot(h_prod, float2(1,0));
+    
+    return float3(position.x, wave_height, position.z);
+}
+
 float3 displacement_calculation(const float3 position)
 {
     float3 displacement = float3(0,0,0);
     
     for (int i = 0; i < wave_parameter_count; i++)
-         displacement += gerstner_wave_displacement(position, WaveParameters[i]);
-    
+        displacement += gerstner_wave_displacement(position, WaveParameters[i]);
+
+    // for (int i = 0; i < wave_parameter_count; i++)
+    // {
+    //     const float wave_height_time = gerstner_wave_displacement(position, WaveParameters[i]).y;
+    //     displacement += fft_calculation(position, WaveParameters[i].wave_length, wave_height_time);
+    // }
+        
     return displacement;
 }
 

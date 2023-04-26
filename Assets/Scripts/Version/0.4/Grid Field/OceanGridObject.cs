@@ -10,17 +10,18 @@ namespace Version._0._4.Grid_Field
         public static readonly Dictionary<int, Dictionary<int, MeshInformation>> HashTable =
             new Dictionary<int, Dictionary<int, MeshInformation>>();
         
-        private MeshInformation _Information;
-        
-        private static readonly int 
-            VerticesPropertyID = Shader.PropertyToID("vertices"), 
-            UVsPropertyID = Shader.PropertyToID("uvs");
+        private MeshInformation _MeshInformation;
+
+        private static readonly int
+            VerticesPropertyID = Shader.PropertyToID("vertices"),
+            UVsPropertyID = Shader.PropertyToID("uvs"),
+            ResolutionPropertyID = Shader.PropertyToID("mesh_resolution");
 
         public void Setup(int index, int x, int z, Vector2 shift)
         {
             var mesh = GetComponent<MeshFilter>().mesh;
             
-            _Information = new MeshInformation()
+            _MeshInformation = new MeshInformation()
             {
                 Mesh = mesh,
                 VerticesBuffer = new ComputeBuffer(mesh.vertexCount, sizeof(float) * 3),
@@ -29,22 +30,23 @@ namespace Version._0._4.Grid_Field
             
             if (HashTable.TryGetValue(x, out var value))
             {
-                value.Add(z, _Information);
+                value.Add(z, _MeshInformation);
             }
             else
             {
-                HashTable.Add(x, new Dictionary<int, MeshInformation> {{z, _Information}});
+                HashTable.Add(x, new Dictionary<int, MeshInformation> {{z, _MeshInformation}});
             }
 
             var material = GetComponent<Renderer>().material;
-            material.SetBuffer(VerticesPropertyID, _Information.VerticesBuffer);
+            material.SetBuffer(VerticesPropertyID, _MeshInformation.VerticesBuffer);
+            material.SetInt(ResolutionPropertyID, GridField.MeshResolution);
         }
 
-        public MeshInformation GetMeshInformation() => _Information;
+        public MeshInformation GetMeshInformation() => _MeshInformation;
 
         private void OnDestroy()
         {
-            _Information.VerticesBuffer?.Dispose();
+            _MeshInformation.VerticesBuffer?.Dispose();
         }
     }
 }

@@ -31,6 +31,12 @@ namespace Version._0._4.Grid_Field
             MeshVertexCount = mesh.vertexCount;
             MeshResolution = MeshTable.GetFraction(MeshVertexCount);
             MeshScale = mesh.bounds.size;
+
+            var bounds = new Bounds()
+            {
+                center = mesh.bounds.center,
+                size = mesh.bounds.size * scaling,
+            };
             
             
             for (var x = 0; x < GridFieldResolution.x; x++)
@@ -40,6 +46,7 @@ namespace Version._0._4.Grid_Field
                     var obj = Instantiate(WaveTemplate, transform);
                     obj.Setup(x + z * GridFieldResolution.y, x, z, new Vector2(x * scaling, z * scaling) * new Vector2(MeshScale.x, MeshScale.z));
                     obj.transform.position = new Vector3(x * shift.x, transform.position.y, z * shift.y);
+                    obj.GetMeshInformation().Mesh.bounds = bounds;
                 }
             }
             

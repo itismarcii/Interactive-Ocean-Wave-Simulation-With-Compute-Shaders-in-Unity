@@ -16,7 +16,7 @@ namespace Version._0._4.Base
         {
             _GridField.GenerateGrid(_MeshDisplacer.GetScaling());
             _GridResolution = _GridField.GetGridFieldResolution();
-
+            
             _MeshDisplacer.VertexCount = GridField.MeshVertexCount;
             _MeshDisplacer.Setup(GridField.MeshResolution);
             _MeshDisplacer.SetCenter(GridField.MeshScale.x * _MeshDisplacer.GetScaling() / 2);
