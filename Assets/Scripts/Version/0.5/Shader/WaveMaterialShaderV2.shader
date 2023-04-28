@@ -84,16 +84,12 @@ Shader "WaveSimulationMaterialShaderV2"
                 const float3 normal_direction = normalize(mul(float4(normal, 0.0), unity_WorldToObject).xyz);
                 
                 const float3 light_direction = normalize(_WorldSpaceLightPos0.xyz);
-                const float atten = 1.0;
-                
-                const float3 diffuse_reflection = atten * _LightColor0.xyz * max(0.0, dot(normal_direction, light_direction));
-                const float3 light_final = diffuse_reflection + UNITY_LIGHTMODEL_AMBIENT.xyz;
-                
-                o.col = fixed4(light_final * _Color.xyz, 1.0);
-                // o.col = float4(normal, 1);
+                const float3 diffuse_reflection =
+                    _Color.xyz * _LightColor0.xyz * max(0.0, dot(normal_direction, light_direction));
+
+                o.col = fixed4(diffuse_reflection, 1);
                 return o;
             }
-            
            
             fixed4 frag (const v2f i) : COLOR
             {

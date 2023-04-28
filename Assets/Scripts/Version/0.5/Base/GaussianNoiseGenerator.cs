@@ -7,8 +7,6 @@ namespace Version._0._5.Base
         public static Texture2D Generate(int resolutionX, int resolutionY, float noiseScale, float noiseIntensity, float noiseMean, float noiseStdDev)
         {
             var noiseTexture = new Texture2D(resolutionX, resolutionY);
-
-            Debug.Log(resolutionY);
             
             for (var x = 0; x < resolutionX; x++)
             {
