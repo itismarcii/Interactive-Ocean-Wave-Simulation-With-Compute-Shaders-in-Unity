@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
-using Version._0._5.Grid_Field;
+using Version._0._7.Grid_Field;
 using Debug = UnityEngine.Debug;
 
-namespace Version._0._5.Base
+namespace Version._0._7.Base
 {
     public class MeshDisplacer : MonoBehaviour
     {
@@ -37,6 +37,7 @@ namespace Version._0._5.Base
             _MeshShiftPropertyId = Shader.PropertyToID("meshShift"),
             _MeshCenterShiftPropertyId = Shader.PropertyToID("meshCenter"),
             _GaussianNoisePropertyId = Shader.PropertyToID("gaussianNoise");
+
 
         private float _GlobalTime = 0;
 
@@ -92,14 +93,17 @@ namespace Version._0._5.Base
             _ComputeShader.Dispatch(0, 32, 1, 32);
         }
 
+        public static void GetMeshDataVertices(ref MeshInformation meshInformation) => 
+            meshInformation.VerticesBuffer.GetData(meshInformation.VerticesData);
+        
+
         public void SetScaling(float scaling) => _ComputeShader.SetFloat(_ScalingPropertyId, scaling);
 
-        public void SetCenter(float center) => _ComputeShader.SetFloat(_MeshCenterShiftPropertyId, center);
         public void IncreaseTime() => _GlobalTime += Time.deltaTime;
         public void SetGlobalTime() => _ComputeShader.SetFloat(_GlobalTimePropertyID, _GlobalTime);
-
         public void SetGuassianNoise(Texture2D texture2D) => _ComputeShader.SetTexture(0, _GaussianNoisePropertyId, texture2D);
 
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T[] GetBufferData<T>(int kernel, ComputeBuffer buffer, int propertyId, IReadOnlyCollection<T> data)
         {
