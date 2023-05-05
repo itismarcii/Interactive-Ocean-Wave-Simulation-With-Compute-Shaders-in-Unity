@@ -66,23 +66,34 @@ float3 gerstner_wave_displacement(const float3 position, WaveParameter wave)
     // float result = dot(dispacement, position) + laplacian;
 }
 
-float3 fft_calculation(const float3 position)
+float3 fft_calculation(const float3 position, const WaveParameter wave, const float noise)
 {
-    return float3(0,0,0);
+    const float2 wind_direction = wave.direction;
+    const float wind_speed = wave.speedModifer;
+    const float wave_amplitude = wave.amplitude * 10;
+
+    const float frequency = 2 * PI / wave.wave_length;
+    const float2 wave_vector = frequency * wind_direction;
+
+    const float phase_shift = dot(wave_vector, position.xz);
+    const float wave_height = wave_amplitude * noise * sin(phase_shift - wind_speed * _TIME_);
+    
+    return float3(position.x, wave_height, position.z);
 }
 
 float3 displacement_calculation(const float3 position, const float noise)
 {
     float3 displacement = float3(0,0,0);
-    
-    for (int i = 0; i < wave_parameter_count; i++)
-        displacement += gerstner_wave_displacement(position, WaveParameters[i]);
 
+    // displacement += fft_calculation(position, WaveParameters[0], noise);
+    
     // for (int i = 0; i < wave_parameter_count; i++)
-    // {
-    //     const float wave_height_time = gerstner_wave_displacement(position, WaveParameters[i]).y;
-    //     displacement += fft_calculation(position, WaveParameters[i].wave_length, wave_height_time);
-    // }
+    //     displacement += gerstner_wave_displacement(position, WaveParameters[i]);
+
+    for (int i = 0; i < wave_parameter_count; i++)
+    {
+        displacement += fft_calculation(position, WaveParameters[i], noise);
+    }
         
     return displacement;
 }

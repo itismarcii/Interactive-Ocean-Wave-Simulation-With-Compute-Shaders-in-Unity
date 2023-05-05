@@ -958,8 +958,8 @@ MonoBehaviour:
   _MeshDisplacer: {fileID: 2032946698}
   UsShaderRendering: 1
   _NoiseParameter:
-    Scale: 5
-    Intensity: 0.1
-    Mean: 0.25
-    StdDev: 0.05
+    Scale: 50
+    Intensity: 0.17
+    Mean: 0.14
+    StdDev: 0.004
   _Image: {fileID: 46745611}
