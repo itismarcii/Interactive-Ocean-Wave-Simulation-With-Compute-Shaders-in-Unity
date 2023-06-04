@@ -1,5 +1,8 @@
 # Interactive-Ocean-Wave-Simulation-With-Compute-Shaders-in-Unity :: Bachelor Thesis release
 
+Interactive Ocean Wave Simulation with Compute shader in Unity is an approach to an interactive ocean surface that focuses on the 
+performant implementation for a Unity game environment.
+
 Das Projekt beinhaltet 6 pre-offical-release versionen und eine Tutorial version.
 
 - v0.1 : Generierung der Gerstner wave in Unity
