@@ -264,7 +264,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 3141282f81a7d104387238137237a6de, type: 2}
     - target: {fileID: 919132149155446097, guid: f18fc41d352029042b49b8f334bb8e43, type: 3}
       propertyPath: m_Name
-      value: Plane_64x1x64
+      value: Wave_64x1x64
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: f18fc41d352029042b49b8f334bb8e43, type: 3}
       propertyPath: m_IsActive
@@ -432,7 +432,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 3141282f81a7d104387238137237a6de, type: 2}
     - target: {fileID: 919132149155446097, guid: 5e3680bdf64801e48bba87e046cfc1c8, type: 3}
       propertyPath: m_Name
-      value: Plane_32x1x32
+      value: Wave_32x1x32
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 5e3680bdf64801e48bba87e046cfc1c8, type: 3}
       propertyPath: m_IsActive
