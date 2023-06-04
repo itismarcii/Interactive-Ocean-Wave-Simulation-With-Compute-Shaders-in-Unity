@@ -20,7 +20,6 @@ RWStructuredBuffer<WaveParameter> WaveParameters;
 
 // Output
 RWStructuredBuffer<float3> VerticesOutput;
-RWStructuredBuffer<float4> VerticesShaderOutput;
 RWStructuredBuffer<float2> UvOutput;
 RWStructuredBuffer<int> TriangleOutput;
 
@@ -86,7 +85,6 @@ void wave_displacement (int3 id : SV_DispatchThreadID)
             pos += displacement_calculation(pos);
 
             VerticesOutput[index] = pos;
-            VerticesShaderOutput[index] = float4(pos.xyz, 1);
             UvOutput[index] = pos.xz;
         }
     }

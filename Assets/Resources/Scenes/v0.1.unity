@@ -260,7 +260,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0a613f8bf844d454fb04f76d5e515bc6, type: 2}
+  - {fileID: 2100000, guid: 3141282f81a7d104387238137237a6de, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -489,4 +489,4 @@ MonoBehaviour:
   - Direction: {x: 0.5, y: 0.5}
     Amplitude: 0.2
     WaveLength: 2
-  _AmountOfWaveCalculations: 100
+  _AmountOfWaveCalculations: 1

@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
-using Version._0._5.Grid_Field;
+using Version._0._6.Grid_Field;
 using Debug = UnityEngine.Debug;
 
-namespace Version._0._5.Base
+namespace Version._0._6.Base
 {
     public class MeshDisplacer : MonoBehaviour
     {
@@ -35,8 +35,7 @@ namespace Version._0._5.Base
             _MaxHeightAmplifierPropertyID = Shader.PropertyToID("max_height_amplifier"),
             _ScalingPropertyId = Shader.PropertyToID("scaling"),
             _MeshShiftPropertyId = Shader.PropertyToID("meshShift"),
-            _MeshCenterShiftPropertyId = Shader.PropertyToID("meshCenter"),
-            _GaussianNoisePorpertyId = Shader.PropertyToID("gaussianNoise");
+            _MeshCenterShiftPropertyId = Shader.PropertyToID("meshCenter");
 
         private float _GlobalTime = 0;
 
@@ -92,19 +91,14 @@ namespace Version._0._5.Base
             _ComputeShader.Dispatch(0, 32, 1, 32);
         }
 
+        public static void GetMeshDataVertices(ref MeshInformation meshInformation) => 
+            meshInformation.VerticesBuffer.GetData(meshInformation.VerticesData);
+        
+
         public void SetScaling(float scaling) => _ComputeShader.SetFloat(_ScalingPropertyId, scaling);
 
-        public void SetCenter(float center) => _ComputeShader.SetFloat(_MeshCenterShiftPropertyId, center);
         public void IncreaseTime() => _GlobalTime += Time.deltaTime;
         public void SetGlobalTime() => _ComputeShader.SetFloat(_GlobalTimePropertyID, _GlobalTime);
-
-        public void SetGuassianNoise(Texture2D texture2D)
-        {
-            // RenderTexture renderTexture =
-            //     new RenderTexture(texture2D.width, texture2D.height, 0, RenderTextureFormat.ARGB32);
-            _ComputeShader.SetTexture(0, _GaussianNoisePorpertyId, texture2D);
-            // Destroy(renderTexture);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T[] GetBufferData<T>(int kernel, ComputeBuffer buffer, int propertyId, IReadOnlyCollection<T> data)

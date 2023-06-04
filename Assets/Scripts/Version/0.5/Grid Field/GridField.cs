@@ -3,23 +3,27 @@ using Extensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Version._0._5.Grid_Field
+namespace Version._0._6.Grid_Field
 {
     public class GridField : MonoBehaviour
     {
         [SerializeField] private OceanGridObject WaveTemplate;
         [SerializeField] private Vector2Int GridFieldResolution;
+        public static Vector2Int _GridFieldResolution;
 
         public bool IsGenerated { get; private set; } = false;
         public static int MeshResolution { get; private set; } = 0;
         public static int MeshVertexCount { get; private set; } = 0;
         public static Vector3 MeshScale { get; private set; }
-
+        public static float Scaling { get; private set; }
+        
         public Vector2Int GetGridFieldResolution() => GridFieldResolution;
         
         public void GenerateGrid(float scaling = 1)
         {
             if(IsGenerated) return;
+
+            _GridFieldResolution = GridFieldResolution;
             
             MeshTable.SetupTable(1000);
 
@@ -32,13 +36,15 @@ namespace Version._0._5.Grid_Field
             MeshResolution = MeshTable.GetFraction(MeshVertexCount);
             MeshScale = mesh.bounds.size;
 
+            Scaling = scaling;
+            
             var bounds = new Bounds()
             {
-                center = mesh.bounds.center,
+                center = mesh.bounds.center + mesh.bounds.size / 2 + new Vector3(3,10,3),
                 size = mesh.bounds.size * scaling,
             };
-            
-            
+
+
             for (var x = 0; x < GridFieldResolution.x; x++)
             {
                 for (var z = 0; z < GridFieldResolution.y; z++)
@@ -51,7 +57,7 @@ namespace Version._0._5.Grid_Field
             }
             
             WaveTemplate.gameObject.SetActive(false);
-
+            
             IsGenerated = true;
         }
         
@@ -65,6 +71,8 @@ namespace Version._0._5.Grid_Field
             }
 
             WaveTemplate.gameObject.SetActive(true);
+
+            _GridFieldResolution = Vector2Int.zero;
 
             IsGenerated = false;
         }

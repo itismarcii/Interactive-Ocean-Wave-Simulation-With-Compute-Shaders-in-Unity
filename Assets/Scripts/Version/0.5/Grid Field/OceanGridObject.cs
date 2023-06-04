@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Version._0._5.Grid_Field
+namespace Version._0._6.Grid_Field
 {
     [RequireComponent(typeof(MeshFilter))]
     public class OceanGridObject : MonoBehaviour
@@ -25,7 +25,10 @@ namespace Version._0._5.Grid_Field
             {
                 Mesh = mesh,
                 VerticesBuffer = new ComputeBuffer(mesh.vertexCount, sizeof(float) * 3),
-                Shift = shift
+                Shift = shift,
+                GridShift = new Vector3(shift.x, 1, shift.y),
+                LastUpdateTime = Time.time,
+                VerticesData = new Vector3[mesh.vertexCount]
             };
             
             if (HashTable.TryGetValue(x, out var value))

@@ -128,7 +128,7 @@ namespace Version._0._3.Base
             _ComputeShader.SetBuffer(0, _UVOutputBufferPropertyID, _UVBuffer);
             _ComputeShader.SetBuffer(0, _WaveParameterBufferPropertyID, _WaveParameterBuffer);
             _ComputeShader.Dispatch(0, 32, 1, 32);
-            
+
             vertices = new Vector3[_VertexCount];
             uvs = new Vector2[_VertexCount];
             

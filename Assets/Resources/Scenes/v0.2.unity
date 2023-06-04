@@ -246,7 +246,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0a613f8bf844d454fb04f76d5e515bc6, type: 2}
+  - {fileID: 2100000, guid: 3141282f81a7d104387238137237a6de, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -477,7 +477,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09aec08b9db416042aa64bc8ee1658d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _WaveMultiplier: 100
+  _WaveMultiplier: 1
   _ComputeShader: {fileID: 7200000, guid: a7805f397e03b664aae44ce03c398c01, type: 3}
   _MeshFilter: {fileID: 1182787051}
   MaxHeightAmplifier: 0

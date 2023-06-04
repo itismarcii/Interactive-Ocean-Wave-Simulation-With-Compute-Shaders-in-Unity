@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Version._0._5.Base
+namespace Version._0._6.Base
 {
     [Serializable]
     public struct WaveParameter
