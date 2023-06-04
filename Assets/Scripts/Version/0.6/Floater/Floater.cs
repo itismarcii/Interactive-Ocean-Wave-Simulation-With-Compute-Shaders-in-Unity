@@ -43,8 +43,8 @@ namespace Version._0._6.Floater
                 Mathf.Clamp01((_WaveHeight - transform.position.y) / _DepthBeforeSubmerged) * _DisplacementAmount;
             
             _Rigidbody.AddForceAtPosition(new Vector3(0f, Mathf.Abs(Physics.gravity.y) * displacementMultiplier, 0f), transform.position, ForceMode.Acceleration);
-            _Rigidbody.AddForce(-_Rigidbody.velocity * (displacementMultiplier * _WaterDrag * Time.fixedDeltaTime), ForceMode.VelocityChange);
-            _Rigidbody.AddTorque(-_Rigidbody.angularVelocity * (displacementMultiplier * _WaterAngularDrag * Time.fixedDeltaTime), ForceMode.VelocityChange);
+            _Rigidbody.AddForce(-_Rigidbody.velocity * (_WaterDrag * Time.fixedDeltaTime), ForceMode.VelocityChange);
+            _Rigidbody.AddTorque(-_Rigidbody.angularVelocity * (_WaterAngularDrag * Time.fixedDeltaTime), ForceMode.VelocityChange);
         }
     }
 }
