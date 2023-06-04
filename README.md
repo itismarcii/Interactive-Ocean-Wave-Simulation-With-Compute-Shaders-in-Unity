@@ -9,6 +9,6 @@ The project contains 5 pre-offical-release versions and a tutorial version.
 - v0.2 : Implementation of the Gerstner wave in Compute sahder
 - v0.3 : Introduction chunk system
 - v0.4 : Generation of the grid field
-- v0.5 : Floating-point implementation
+- v0.5 : Floating-point implementation / Shader communication
 
 - Tutorial Version contains the tutorial script
