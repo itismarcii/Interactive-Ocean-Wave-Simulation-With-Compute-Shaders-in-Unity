@@ -3,13 +3,13 @@
 Interactive Ocean Wave Simulation with Compute shader in Unity is an approach to an interactive ocean surface that focuses on the 
 performant implementation for a Unity game environment.
 
-Das Projekt beinhaltet 6 pre-offical-release versionen und eine Tutorial version.
+The project contains 6 pre-offical-release versions and a tutorial version.
 
-- v0.1 : Generierung der Gerstner wave in Unity
-- v0.2 : Die implementierung von der Gerstner wave in Compute shader
-- v0.3 : Implementierung des Chunk systems
-- v0.4 : Generierung des grid fields
+- v0.1 : Generation of the Gerstner wave in Unity
+- v0.2 : Implementation of the Gerstner wave in Compute sahder
+- v0.3 : Introduction chunk system
+- v0.4 : Generation of the grid field
 - v0.5 : Determining closest vertex
 - v0.6 : Floating-point implementation
 
-- Tutorial Version enthält das tutorial script
+- Tutorial Version contains the tutorial script
